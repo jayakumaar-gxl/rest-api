@@ -10,10 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
 
     // ID Validation
     if ($id === false || $id === null) {
-        http_response_code(400); //Data not found
+        http_response_code(400); //Bad Request
         echo json_encode([
             'status' => false,
-            'message' => "User value is missed",
+            'message' => "Employee id is missing or invalid",
+            "data"=>null
         ]);
         exit;
     }
@@ -34,7 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
         http_response_code(404); //Data not found
         echo json_encode([
             'status' => false,
-            'message' => 'Employee not found'
+            'message' => 'Employee not found',
+            'data'=>null
         ]);
         exit;
     }
@@ -58,13 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
         http_response_code(200); //Successful Delete
         echo json_encode([
             'status' => true,
-            'message' => $name . ' details deleted successfully',
+            'message' => $name . ' - Employee deleted successfully',
+            'data'=>null
         ]);
     } catch (mysqli_sql_exception $e) {
-        http_response_code(500); //Bad Request
+        http_response_code(500); //Internal Server Error
         echo json_encode([
             'status' => false,
-            'message' => 'User Deletion Failed'
+            'message' => 'Failed to delete employee',
+            'data'=>null
         ]);
     }
 
@@ -88,7 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
         echo json_encode(
             [
                 "status" => false,
-                "message" => "Invalid json format"
+                "message" => "Invalid json format",
+                "data"=>null
             ]
         );
         exit;
@@ -99,10 +104,11 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
     $department = $input['department'];
 
     if (empty($name) || empty($email) || empty($department)) {
-        http_response_code(400); //Data not found
+        http_response_code(400); //Bad Request
         echo json_encode([
             'status' => false,
-            'message' => 'Name, Email or Department values is missed'
+            'message' => 'User - Name, Email or Department values are missing',
+            'data'=>null
         ]);
         exit;
     }
@@ -126,14 +132,16 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
         http_response_code(200); //Successful Update
         echo json_encode([
             'status' => true,
-            'message' => $name . ' details updated successfully',
+            'message' => $name . ' - employee updated successfully',
+            'data'=>null
         ]);
         // exit;
     } catch (mysqli_sql_exception $e) {
         http_response_code(500); //Bad Request
         echo json_encode([
             'status' => false,
-            'message' => 'User Update Failed',
+            'message' => 'Failed to update employee',
+            'data'=>null
         ]);
         // exit
     }
@@ -153,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         echo json_encode([
             'status' => false,
             'message' => 'Invalid JSON Format',
+            'data'=>null
         ]);
         exit;
     }
@@ -175,6 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             'status' => false,
             // 'message' => $e->getMessage(),
             'message' => 'Name, Email or Department value is missing',
+            'data' => null
         ]);
         exit;
     }
@@ -197,14 +207,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         http_response_code(201); //Successful Creation
         echo json_encode([
             'status' => true,
-            'message' => 'User Inserted Successfully',
+            'message' => 'Employee Created Successfully',
+            'data'=>null
         ]);
     } catch (mysqli_sql_exception $e) {
-        http_response_code(500); //Bad Request
+        http_response_code(500); //Internal Server Error
         echo json_encode([
             'status' => false,
             // 'message' => $e->getMessage(),
-            'message' => 'User Insertion Failed',
+            'message' => 'Failed to create employee',
+            'data'=>null
         ]);
         // exit;
     }
@@ -222,7 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
             http_response_code(400);
             echo json_encode([
                 "status"=>false,
-                "message"=>"Invalid ID"
+                "message"=>"Invalid Employee ID",
+                "data"=>null
             ]);
             exit;
         }
@@ -242,7 +255,8 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         http_response_code(500); //Bad Request
         echo json_encode([
             "status" => false,
-            "message" => "Database query failed"
+            "message" => "Database query failed",
+            "data"=>null
         ]);
         exit;
     }
@@ -258,15 +272,20 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         echo json_encode([
             'status' => false,
             'message' => 'Employee not found',
+            'data'=>null
         ]);
+        exit;
     }
 
     http_response_code(200); //Request Successful
     echo json_encode([
         'status' => true,
+        'message'=>"Employees Fetched Successfully",
         'data' => $employees,
     ]);
 }
+
+
 // if ($_SERVER['REQUEST_METHOD'] == "GET") {
     //     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
 
