@@ -6,7 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     $input = json_decode(file_get_contents('php://input'), true);
 
-    
+
     // ID Validation
     if ($id === false || $id === null) {
         http_response_code(400); //Data not found
@@ -17,9 +17,17 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
         exit;
     }
 
-    // Check Employee Exist
-    $checkQuery = "SELECT id,name from employees WHERE id='$id'";
-    $checkResult = mysqli_query($conn, $checkQuery);
+    // ? Check Employee Exist
+    // * Normal value selection method
+    // $checkQuery = "SELECT id,name from employees WHERE id='$id'";
+    // $checkResult = mysqli_query($conn, $checkQuery);
+
+    // * Prepared statements selection method
+    $checkStmt = mysqli_prepare($conn, "SELECT id,name from employees WHERE id=?");
+    mysqli_stmt_bind_param($checkStmt, "i", $id);
+    mysqli_stmt_execute($checkStmt);
+    $checkResult = mysqli_stmt_get_result($checkStmt);
+
 
     if (mysqli_num_rows($checkResult) == 0) {
         http_response_code(404); //Data not found
@@ -33,10 +41,19 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
     $employee = mysqli_fetch_assoc($checkResult);
     $name = $employee['name'];
 
+    // *  Normal value selection method 
+    // $query = "DELETE from employees where id='$id'";
 
-    $query = "DELETE from employees where id='$id'";
+    // *  Prepared statements method
+    $deleteStmt = mysqli_prepare($conn, "DELETE from employees where id=?");
+    mysqli_stmt_bind_param($deleteStmt, 'i', $id);
     try {
-        $result = mysqli_query($conn, $query);
+        // *  Normal value selection method (continuation)
+        // $result = mysqli_query($conn, $query);
+
+        // *  Prepared statements method (continuation)
+        mysqli_stmt_execute($deleteStmt);
+
         http_response_code(200); //Successful Delete
         echo json_encode([
             'status' => true,
@@ -89,12 +106,22 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
         exit;
     }
 
-
-    $query = "UPDATE employees SET name='$name',email='$email',department='$department' WHERE id='$id'";
+    // Normal value add method
+    // $query = "UPDATE employees SET name='$name',email='$email',department='$department' WHERE id='$id'";
     // print_r($query);
     // exit;
+
+    // Prepared statements method
+    $stmt = mysqli_prepare($conn, "UPDATE employees SET name=?,email=?,department=? WHERE id=?");
+    mysqli_stmt_bind_param($stmt, 'sssi', $name, $email, $department, $id);
+
     try {
-        $result = mysqli_query($conn, $query);
+        // Normal value add method continuation
+        // $result = mysqli_query($conn, $query);
+
+        // Prepared statements method continuation
+        mysqli_stmt_execute($stmt);
+
         http_response_code(200); //Successful Update
         echo json_encode([
             'status' => true,
@@ -151,12 +178,21 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         exit;
     }
 
-    $query = "INSERT INTO employees (name,email, department) VALUES 
-    ('$name','$email','$department')";
-    // $result=mysqli_query($conn, $query);
+    // Normal value add method
+    // $query = "INSERT INTO employees (name,email, department) VALUES ('$name','$email','$department')";
+
+    // Prepared statements method
+    $stmt = mysqli_prepare($conn, "INSERT INTO employees (name,email,department) VALUES (?,?,?)");
+    mysqli_stmt_bind_param($stmt, 'sss', $name, $email, $department);
+
 
     try {
-        $result = mysqli_query($conn, $query);
+        // Normal value add method continuation
+        // $result = mysqli_query($conn, $query);
+
+        // Prepared statements method continuation
+        mysqli_stmt_execute($stmt);
+
         http_response_code(201); //Successful Creation
         echo json_encode([
             'status' => true,
@@ -175,14 +211,31 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
 // GET
 if ($_SERVER['REQUEST_METHOD'] == "GET") {
+    $idProvided = isset($_GET['id']);
     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+    // var_dump($id);
+    // exit;
 
-    if ($id != null && $id != FALSE) {
-        $query = "SELECT id, name, email, department FROM employees WHERE id=$id";
-    } else {
-        $query = "SELECT id, name, email, department FROM employees ORDER BY id DESC";
+    if ($idProvided) {
+        if ($id === null || $id === FALSE) {
+            http_response_code(400);
+            echo json_encode([
+                "status"=>false,
+                "message"=>"Invalid ID"
+            ]);
+            exit;
+        }
+        $stmt = mysqli_prepare($conn, "SELECT id, name, email, department FROM employees WHERE id=?");
+        mysqli_stmt_bind_param($stmt, 'i', $id);
+        mysqli_stmt_execute($stmt);
     }
-    $result = mysqli_query($conn, $query);
+    else {
+       // prepared Statements
+        // $query = "SELECT id, name, email, department FROM employees ORDER BY id DESC";
+        $stmt = mysqli_prepare($conn, "SELECT id,name,email,department FROM employees ORDER BY id DESC");
+        mysqli_stmt_execute($stmt);
+    }
+    $result = mysqli_stmt_get_result($stmt);
 
     if (!$result) {
         http_response_code(500); //Bad Request
@@ -198,7 +251,8 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         $employees[] = $row;
     }
 
-    if ($id != null && count($employees) == 0) {
+    // if ($id != null && count($employees) == 0) {
+    if ($idProvided  && count($employees) == 0) {
         http_response_code(404); // Employee not found
         echo json_encode([
             'status' => false,
@@ -212,5 +266,57 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         'data' => $employees,
     ]);
 }
+// if ($_SERVER['REQUEST_METHOD'] == "GET") {
+    //     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+
+    //     // Normal value add method
+    //     // if ($id != null && $id != FALSE) {
+    //     //     $query = "SELECT id, name, email, department FROM employees WHERE id=$id";
+    //     // } else {
+    //     //     $query = "SELECT id, name, email, department FROM employees ORDER BY id DESC";
+    //     // }
+    //     // $result = mysqli_query($conn, $query);
+
+
+    //     // prepared Statements
+    //     if ($id != null && $id != FALSE) {
+    //         $stmt=mysqli_prepare($conn,"SELECT id, name, email, department FROM employees WHERE id=?");
+    //         mysqli_stmt_bind_param($stmt,'i',$id);
+    //         mysqli_stmt_execute($stmt);
+    //     } else {
+    //         // $query = "SELECT id, name, email, department FROM employees ORDER BY id DESC";
+    //         $stmt=mysqli_prepare($conn,"SELECT id,name,email,department FROM employees ORDER BY id DESC");
+    //         mysqli_stmt_execute($stmt);
+    //     }
+    //     $result = mysqli_stmt_get_result($stmt);
+
+    //     if (!$result) {
+    //         http_response_code(500); //Bad Request
+    //         echo json_encode([
+    //             "status" => false,
+    //             "message" => "Database query failed"
+    //         ]);
+    //         exit;
+    //     }
+
+    //     $employees = [];
+    //     while ($row = mysqli_fetch_assoc($result)) {
+    //         $employees[] = $row;
+    //     }
+
+    //     if ($id != null && count($employees) == 0) {
+    //         http_response_code(404); // Employee not found
+    //         echo json_encode([
+    //             'status' => false,
+    //             'message' => 'Employee not found',
+    //         ]);
+    //     }
+
+    //     http_response_code(200); //Request Successful
+    //     echo json_encode([
+    //         'status' => true,
+    //         'data' => $employees,
+    //     ]);
+// }
 
 mysqli_close($conn);
