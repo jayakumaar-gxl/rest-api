@@ -2,6 +2,7 @@
 require_once('../config/conn.php');
 // https://chatgpt.com/share/6aba48b1-cc3c-83ee-9800-97f34b814b1f
 
+
 // DELETE
 if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -284,59 +285,15 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         'data' => $employees,
     ]);
 }
-
-
-// if ($_SERVER['REQUEST_METHOD'] == "GET") {
-    //     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
-
-    //     // Normal value add method
-    //     // if ($id != null && $id != FALSE) {
-    //     //     $query = "SELECT id, name, email, department FROM employees WHERE id=$id";
-    //     // } else {
-    //     //     $query = "SELECT id, name, email, department FROM employees ORDER BY id DESC";
-    //     // }
-    //     // $result = mysqli_query($conn, $query);
-
-
-    //     // prepared Statements
-    //     if ($id != null && $id != FALSE) {
-    //         $stmt=mysqli_prepare($conn,"SELECT id, name, email, department FROM employees WHERE id=?");
-    //         mysqli_stmt_bind_param($stmt,'i',$id);
-    //         mysqli_stmt_execute($stmt);
-    //     } else {
-    //         // $query = "SELECT id, name, email, department FROM employees ORDER BY id DESC";
-    //         $stmt=mysqli_prepare($conn,"SELECT id,name,email,department FROM employees ORDER BY id DESC");
-    //         mysqli_stmt_execute($stmt);
-    //     }
-    //     $result = mysqli_stmt_get_result($stmt);
-
-    //     if (!$result) {
-    //         http_response_code(500); //Bad Request
-    //         echo json_encode([
-    //             "status" => false,
-    //             "message" => "Database query failed"
-    //         ]);
-    //         exit;
-    //     }
-
-    //     $employees = [];
-    //     while ($row = mysqli_fetch_assoc($result)) {
-    //         $employees[] = $row;
-    //     }
-
-    //     if ($id != null && count($employees) == 0) {
-    //         http_response_code(404); // Employee not found
-    //         echo json_encode([
-    //             'status' => false,
-    //             'message' => 'Employee not found',
-    //         ]);
-    //     }
-
-    //     http_response_code(200); //Request Successful
-    //     echo json_encode([
-    //         'status' => true,
-    //         'data' => $employees,
-    //     ]);
-// }
-
 mysqli_close($conn);
+
+// FALLBACK METHOD
+http_response_code(405);
+echo json_encode([
+    'status'=>false,
+    'message'=>'Methods not allowed',
+    'data'=>null
+]);
+exit;
+
+
