@@ -114,7 +114,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 if ($_SERVER['REQUEST_METHOD'] == "GET") {
     $idProvided = isset($_GET['id']);
     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+    $page=filter_input(INPUT_GET,'page',FILTER_VALIDATE_INT);
+    $limit=filter_input(INPUT_GET,'limit',FILTER_VALIDATE_INT);
 
+    if($page == false || $page== null || $page<1){
+        sendResponse(400,false,"Invalid Page Number");
+    }
+    if($limit == false || $limit == null || $limit<1){
+        sendResponse(400,false,"Invalid Limit");
+    }
+    
     if ($idProvided) {
         if ($id === null || $id === FALSE) {
             sendResponse(400, false, "Invalid Employee ID");
@@ -123,7 +132,9 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         mysqli_stmt_bind_param($stmt, 'i', $id);
         mysqli_stmt_execute($stmt);
     } else {
-        $stmt = mysqli_prepare($conn, "SELECT id,name,email,department FROM employees ORDER BY id DESC");
+        $offset=($page-1)*$limit;
+        $stmt = mysqli_prepare($conn, "SELECT id,name,email,department FROM employees ORDER BY id DESC LIMIT ? OFFSET ?");
+        mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
         mysqli_stmt_execute($stmt);
     }
     $result = mysqli_stmt_get_result($stmt);
