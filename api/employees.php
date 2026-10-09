@@ -19,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     $input = json_decode(file_get_contents('php://input'), true);
 
-
     // ID Validation
     if ($id === false || $id === null) {
         sendResponse(400, false, "Employee id is missing or invalid");
@@ -99,7 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     // Prepared statements method
     $stmt = mysqli_prepare($conn, "INSERT INTO employees (name,email,department) VALUES (?,?,?)");
     mysqli_stmt_bind_param($stmt, 'sss', $name, $email, $department);
-
 
     try {
         // Prepared statements method continuation
