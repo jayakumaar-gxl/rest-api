@@ -1,4 +1,6 @@
 $(document).ready(function () {
+  let employees=[];
+
   // TOAST
   let toastTimer;
 
@@ -40,6 +42,8 @@ $(document).ready(function () {
       success: function (response) {
         // console.log("API response",response.data);
         //   $("#employeeTableBody").html("");
+        employees=response.data;
+
         $("#employeeTableBody").empty();
 
         $.each(response.data, function (index, employee) {
@@ -50,7 +54,11 @@ $(document).ready(function () {
                         <td>${employee.name}</td>
                         <td>${employee.email}</td>
                         <td>${employee.department}</td>
-                        <td>Actions</td>
+                        <td>
+                          <button type="button" class="editEmployeeBtn" data-id="${employee.id}">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                          </button>
+                        </td>
                     </tr>        
                 `;
           $("#employeeTableBody").append(row);
@@ -62,10 +70,13 @@ $(document).ready(function () {
   // loadEmployees
   loadEmployees();
 
-  // Add Employee
+  // Create Employee
   $("#addEmployeeBtn").on("click", function () {
     // $('#employeeFormSection').prop('hidden',false);
     $("#employeeFormSection").prop("hidden", false).hide().fadeIn(700);
+    $("#formTitle").text("Add Employee"); 
+    $("#saveEmployeeBtn").prop('hidden',false);
+    $("#updateEmployeeBtn").prop('hidden',true);
   });
 
   // Cancel the Add Employee Flow
@@ -137,5 +148,36 @@ $(document).ready(function () {
         showToast("Something went wrong. Please try again.", "error");
       },
     });
+  });
+
+  // Edit Employee (PUT)
+  // $('.editEmployeeBtn').on('click',function(){
+  $(document).on('click','.editEmployeeBtn',function(){
+    // console.log("Employee ID : ",employeeId);
+    // alert('working')
+    let employeeId=$(this).data('id');
+
+    let employee=employees.find(function(item){
+      return item.id==employeeId;
+    })
+    // console.log(employee);
+
+    if(!employee){
+      showToast('Employee not found','error');
+      return;
+    }
+
+    $('#employeeId').val(employee.id);
+    $('#name').val(employee.name);
+    $('#email').val(employee.email);
+    $('#department').val(employee.department);
+
+    $('#formTitle').text('Edit Employee');
+    $("#saveEmployeeBtn").prop('hidden',true);
+    $("#updateEmployeeBtn").prop('hidden',false);
+
+    $('#employeeFormSection').prop('hidden',false).
+    hide().fadeIn(400);
+    
   });
 });

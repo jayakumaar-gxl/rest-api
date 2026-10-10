@@ -1,6 +1,7 @@
 <?php
 require_once('../config/conn.php');
 // https://chatgpt.com/share/6aba48b1-cc3c-83ee-9800-97f34b814b1f 27914 3237
+//https://chatgpt.com/share/6aca31bf-b8bc-83e8-b312-d9dbeff89983
 
 
 function sendResponse($responseCode, $status, $message, $data = null)
