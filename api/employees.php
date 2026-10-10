@@ -129,12 +129,12 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         if ($id === null || $id === FALSE) {
             sendResponse(400, false, "Invalid Employee ID");
         }
-        $stmt = mysqli_prepare($conn, "SELECT id, name, email, department FROM employees WHERE id=?");
+        $stmt = mysqli_prepare($conn, "SELECT id, name, email, department,status FROM employees WHERE id=? AND status=1");
         mysqli_stmt_bind_param($stmt, 'i', $id);
         mysqli_stmt_execute($stmt);
     } else {
         $offset=($page-1)*$limit;
-        $stmt = mysqli_prepare($conn, "SELECT id,name,email,department FROM employees ORDER BY id DESC LIMIT ? OFFSET ?");
+        $stmt = mysqli_prepare($conn, "SELECT id,name,email,department,status FROM employees WHERE status=1 ORDER BY id DESC LIMIT ? OFFSET ?");
         mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
         mysqli_stmt_execute($stmt);
     }

@@ -58,6 +58,9 @@ $(document).ready(function () {
                           <button type="button" class="editEmployeeBtn" data-id="${employee.id}">
                             <i class="fa-regular fa-pen-to-square"></i>
                           </button>
+                          <button type="button" class="deleteEmployeeBtn" data-id="${employee.id}">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
                         </td>
                     </tr>        
                 `;
@@ -150,7 +153,7 @@ $(document).ready(function () {
     });
   });
 
-  // Edit Employee (PUT)
+  // Update Employee (PUT)
   // $('.editEmployeeBtn').on('click',function(){
   $(document).on('click','.editEmployeeBtn',function(){
     // console.log("Employee ID : ",employeeId);
@@ -180,4 +183,84 @@ $(document).ready(function () {
     hide().fadeIn(400);
     
   });
+  $("#updateEmployeeBtn").on("click", function () {
+    let employeeId = $("#employeeId").val();
+
+    let employeeData = {
+      name: $("#name").val().trim(),
+      email: $("#email").val().trim(),
+      department: $("#department").val().trim(),
+    };
+
+    // console.log("Updating Employee ID:", employeeId);
+    // console.log("Updated Data:", employeeData);
+
+    $.ajax({
+      url: "./api/employees.php?id=" + employeeId,
+      type: "PUT",
+      contentType: "application/json",
+      dataType: "JSON",
+      data: JSON.stringify(employeeData),
+      success: function (response) {
+        //console.log(response);
+        if (response.status) {
+          // Reset the form
+          $("#employeeForm")[0].reset();
+
+          //Close the form
+          $("#employeeFormSection").fadeOut(400, function () {
+            $(this).prop("hidden", true);
+          });
+
+          // Load Employees table
+          loadEmployees();
+
+          // Response message
+          showToast(
+            response.message || "Employee details updated successfully !",
+            "success",
+          );
+        } else {
+          //   $("#toast").text(response.message);
+          showToast(response.message || "Employee update Failed !", "error");
+        }
+      },
+      error: function (xhr) {
+        console.log("Error : ", xhr.responseText);
+      },
+    });
+  });
+
+
+  // Delete Employee
+  $(document).on("click", ".deleteEmployeeBtn", function () {
+    let employeeId = $(this).data("id");
+    //console.log("Delete Employee ID:", employeeId);
+
+    let confirmed = confirm("Are you sure you want to delete this employee?");
+
+    if (confirmed) {
+      $.ajax({
+        url: "./api/employees.php?id=" + employeeId,
+        type: "DELETE",
+        dataType: "json",
+
+        success: function (response) {
+          console.log("DELETE Response:", response);
+
+          if (response.status) {
+            loadEmployees();
+            showToast("Employee deleted successfully", "success");
+          } else {
+            showToast(response.message || "Unable to delete employee", "error");
+          }
+        },
+
+        error: function (xhr) {
+          console.log("DELETE Error:", xhr.responseText);
+        },
+      });
+    }
+  });
+
 });

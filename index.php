@@ -61,7 +61,8 @@ include_once('./config/conn.php');
 
                 <button type="reset">Clear</button>
                 <button type="submit" id="saveEmployeeBtn">Save Employee</button>
-                <button type="submit" id="updateEmployeeBtn">Update Employee</button>
+                <button type="button" id="updateEmployeeBtn" hidden>Update Employee</button>
+                <input type="hidden" id="employeeId" name="employeeId">
                 <button type="button" id="cancelBtn">Cancel</button>
             </form>
 
