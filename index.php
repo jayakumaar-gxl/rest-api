@@ -8,6 +8,12 @@ include_once('./config/conn.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@latest/styles/ag-grid.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@latest/styles/ag-theme-quartz.css" /> -->
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@34.3.1/styles/ag-grid.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@34.3.1/styles/ag-theme-quartz.css" />
+
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
@@ -77,7 +83,7 @@ include_once('./config/conn.php');
 
         </section>
 
-        <section class="table-section">
+        <!-- <section class="table-section">
             <h2>Employee List</h2>
             <p id="message"></p>
             <div class="table-wrapper">
@@ -102,14 +108,17 @@ include_once('./config/conn.php');
 
                 </table>
             </div>
-        </section>
+        </section> -->
 
+        <div id="employeeGrid" class="ag-theme-quartz" style="height: 550px; width: 100%;"></div>
     </div>
 
     <!-- Toast Message -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 
+    <!-- <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@latest/dist/ag-grid-community.min.js"></script> -->
+     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@34.3.1/dist/ag-grid-community.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/4.0.0/jquery.min.js" integrity="sha512-8LENNbXmzI/Gbj+OwXmqR6V4QaUAw0/porPzy1+dQoJqC0JPHedWoe0DDOTL2uHA5XXJyIsPtiMHH86pVlay6A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="./js/app.js"></script>
 </body>

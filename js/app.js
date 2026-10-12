@@ -1,7 +1,7 @@
 $(document).ready(function () {
   let employees = [];
 
-  // STATUS BADGE
+  // Status Badge
   function getStatusLabel(status) {
     switch (Number(status)) {
       case 0:
@@ -15,9 +15,8 @@ $(document).ready(function () {
     }
   }
 
-  // TOAST
+  // Toast
   let toastTimer;
-
   function showToast(message, type = "success") {
     clearTimeout(toastTimer);
     $("#toast")
@@ -50,43 +49,147 @@ $(document).ready(function () {
   // Show Employee (GET)
   function loadEmployees() {
     $.ajax({
-      url: "./api/employees.php?page=1&limit=20",
+      url: "./api/employees.php",
       type: "GET",
       dataType: "json",
       success: function (response) {
+
+        let employees=response.data || [];
+        gridApi.setGridOption('rowData',employees);
+
         // console.log("API response",response.data);
         //   $("#employeeTableBody").html("");
-        employees = response.data;
+        // employees = response.data;
 
-        $("#employeeTableBody").empty();
+        // $("#employeeTableBody").empty();
 
-        $.each(response.data, function (index, employee) {
-          // console.log(index,employee.id,employee.name);
-          let row = `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${employee.name}</td>
-                        <td>${employee.email}</td>
-                        <td>${employee.department}</td>      
-                        <td>${getStatusLabel(employee.status)}</td>                  
-                        <td>
-                          <button type="button" class="editEmployeeBtn" data-id="${employee.id}">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                          </button>
-                          <button type="button" class="deleteEmployeeBtn" data-id="${employee.id}">
-                            <i class="fa-solid fa-trash"></i>
-                          </button>
-                        </td>
-                    </tr>        
-                `;
-          $("#employeeTableBody").append(row);
-        });
+        // $.each(response.data, function (index, employee) {
+        //   // console.log(index,employee.id,employee.name);
+        //   let row = `
+        //             <tr>
+        //                 <td>${index + 1}</td>
+        //                 <td>${employee.name}</td>
+        //                 <td>${employee.email}</td>
+        //                 <td>${employee.department}</td>      
+        //                 <td>${getStatusLabel(employee.status)}</td>                  
+        //                 <td>
+        //                   <button type="button" class="editEmployeeBtn" data-id="${employee.id}">
+        //                     <i class="fa-regular fa-pen-to-square"></i>
+        //                   </button>
+        //                   <button type="button" class="deleteEmployeeBtn" data-id="${employee.id}">
+        //                     <i class="fa-solid fa-trash"></i>
+        //                   </button>
+        //                 </td>
+        //             </tr>        
+        //         `;
+        //   $("#employeeTableBody").append(row);
+        // });
+      },
+      error:function(xhr){
+        console.error("Failed to load employees : ",xhr.responseText);        
       },
     });
   }
 
   // loadEmployees
   loadEmployees();
+
+  // Ag Grid implementation for 
+  let gridApi;
+  const columnDefs=[
+    {
+      headerName:"ID",
+      valueGetter:(params)=>params.node.rowIndex+1,
+      width:90,
+      sortable:true,
+    },
+    {
+      field:"name",
+      headerName:"Name",
+      filter:true,
+      sortable:true,
+    },
+    {
+      field:'email',
+      headerName:'Email',
+      filter:true,
+      sortable:true,
+    },
+    {
+      field:'department',
+      headerName:'Department',
+      filter:true,
+      sortable:true,
+    },
+    {
+    field: "status",
+    headerName: "Status",
+    sortable: true,
+    filter: true,
+    cellRenderer: (params) => {
+        const status = Number(params.value);
+        const badge = document.createElement("span");
+
+        badge.classList.add("status-badge");
+
+        if (status === 1) {
+            badge.classList.add("status-active");
+            badge.textContent = "Active";
+        } else if (status === 2) {
+            badge.classList.add("status-inactive");
+            badge.textContent = "Inactive";
+        } else if (status === 0) {
+            badge.classList.add("status-deleted");
+            badge.textContent = "Deleted";
+        } else {
+            badge.classList.add("status-unknown");
+            badge.textContent = "Unknown";
+        }
+
+        return badge;
+    }
+},
+    {
+    headerName: "Actions",
+    sortable: false,
+    filter: false,
+    cellRenderer: (params) => {
+        const wrapper = document.createElement("div");
+
+        wrapper.innerHTML = `
+            <button type="button"
+                    class="editEmployeeBtn"
+                    data-id="${params.data.id}">
+                <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+
+            <button type="button"
+                    class="deleteEmployeeBtn"
+                    data-id="${params.data.id}">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        `;
+
+        return wrapper;
+    }
+}
+  ];
+  const gridOptions={
+    columnDefs:columnDefs,
+    rowData:[],
+    defaultColDef:{
+      flex:1,
+      minWidth:130,
+      resizable:true,
+    },
+    pagination:true,
+    paginationPageSize:20
+  };
+  gridApi=agGrid.createGrid(
+    document.querySelector('#employeeGrid'),
+    gridOptions
+  );
+
 
   // Create Employee
   $("#addEmployeeBtn").on("click", function () {
