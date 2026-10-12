@@ -124,7 +124,6 @@ th {
     background-color: #dc3545;
 }
 
-
 .toast-close {
     margin-left: 16px;
     padding: 4px;
@@ -147,4 +146,31 @@ th {
     outline: 2px solid #fff;
     outline-offset: 3px;
     border-radius: 3px;
+}
+
+
+/* Status badge */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+.status-active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+.status-inactive {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+.status-deleted {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+.status-unknown {
+    background-color: #e5e7eb;
+    color: #374151;
 }

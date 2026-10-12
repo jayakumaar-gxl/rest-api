@@ -1,5 +1,19 @@
 $(document).ready(function () {
-  let employees=[];
+  let employees = [];
+
+  // STATUS BADGE
+  function getStatusLabel(status) {
+    switch (Number(status)) {
+      case 0:
+        return '<span class="status-badge status-deleted">Deleted</span>';
+      case 1:
+        return '<span class="status-badge status-active">Active</span>';
+      case 2:
+        return '<span class="status-badge status-inactive">Inactive</span>';
+      default:
+        return '<span class="status-badge status-unknown">Unknown</span>';
+    }
+  }
 
   // TOAST
   let toastTimer;
@@ -42,7 +56,7 @@ $(document).ready(function () {
       success: function (response) {
         // console.log("API response",response.data);
         //   $("#employeeTableBody").html("");
-        employees=response.data;
+        employees = response.data;
 
         $("#employeeTableBody").empty();
 
@@ -53,7 +67,8 @@ $(document).ready(function () {
                         <td>${index + 1}</td>
                         <td>${employee.name}</td>
                         <td>${employee.email}</td>
-                        <td>${employee.department}</td>
+                        <td>${employee.department}</td>      
+                        <td>${getStatusLabel(employee.status)}</td>                  
                         <td>
                           <button type="button" class="editEmployeeBtn" data-id="${employee.id}">
                             <i class="fa-regular fa-pen-to-square"></i>
@@ -77,9 +92,10 @@ $(document).ready(function () {
   $("#addEmployeeBtn").on("click", function () {
     // $('#employeeFormSection').prop('hidden',false);
     $("#employeeFormSection").prop("hidden", false).hide().fadeIn(700);
-    $("#formTitle").text("Add Employee"); 
-    $("#saveEmployeeBtn").prop('hidden',false);
-    $("#updateEmployeeBtn").prop('hidden',true);
+    $("#formTitle").text("Add Employee");
+    $("#saveEmployeeBtn").prop("hidden", false);
+    $("#updateEmployeeBtn").prop("hidden", true);
+    $("#statusField").hide();
   });
 
   // Cancel the Add Employee Flow
@@ -148,48 +164,55 @@ $(document).ready(function () {
       },
       error: function (xhr) {
         console.log("POST Error : ", xhr.responseText);
-        showToast("Something went wrong. Please try again.", "error");
+        let response = xhr.responseJSON;
+        if (response && response.message) {
+          showToast(response.message, "error");
+        } else {
+          showToast("Something went wrong. Please try again.", "error");
+        }
       },
     });
   });
 
   // Update Employee (PUT)
   // $('.editEmployeeBtn').on('click',function(){
-  $(document).on('click','.editEmployeeBtn',function(){
+  $(document).on("click", ".editEmployeeBtn", function () {
     // console.log("Employee ID : ",employeeId);
     // alert('working')
-    let employeeId=$(this).data('id');
+    $("#statusField").show();
+    let employeeId = $(this).data("id");
 
-    let employee=employees.find(function(item){
-      return item.id==employeeId;
-    })
+    let employee = employees.find(function (item) {
+      return item.id == employeeId;
+    });
     // console.log(employee);
 
-    if(!employee){
-      showToast('Employee not found','error');
+    if (!employee) {
+      showToast("Employee not found", "error");
       return;
     }
 
-    $('#employeeId').val(employee.id);
-    $('#name').val(employee.name);
-    $('#email').val(employee.email);
-    $('#department').val(employee.department);
+    $("#employeeId").val(employee.id);
+    $("#name").val(employee.name);
+    $("#email").val(employee.email);
+    $("#department").val(employee.department);
+    $("#status").val(employee.status);
 
-    $('#formTitle').text('Edit Employee');
-    $("#saveEmployeeBtn").prop('hidden',true);
-    $("#updateEmployeeBtn").prop('hidden',false);
+    $("#formTitle").text("Edit Employee");
+    $("#saveEmployeeBtn").prop("hidden", true);
+    $("#updateEmployeeBtn").prop("hidden", false);
 
-    $('#employeeFormSection').prop('hidden',false).
-    hide().fadeIn(400);
-    
+    $("#employeeFormSection").prop("hidden", false).hide().fadeIn(400);
   });
   $("#updateEmployeeBtn").on("click", function () {
+    
     let employeeId = $("#employeeId").val();
 
     let employeeData = {
       name: $("#name").val().trim(),
       email: $("#email").val().trim(),
       department: $("#department").val().trim(),
+      status:$('#status').val().trim(),
     };
 
     // console.log("Updating Employee ID:", employeeId);
@@ -227,10 +250,15 @@ $(document).ready(function () {
       },
       error: function (xhr) {
         console.log("Error : ", xhr.responseText);
+        let response = xhr.responseJSON;
+        if (response && response.message) {
+          showToast(response.message, "error");
+        } else {
+          showToast("Something went wrong. Please try again.", "error");
+        }
       },
     });
   });
-
 
   // Delete Employee
   $(document).on("click", ".deleteEmployeeBtn", function () {
@@ -238,13 +266,11 @@ $(document).ready(function () {
     //console.log("Delete Employee ID:", employeeId);
 
     let confirmed = confirm("Are you sure you want to delete this employee?");
-
     if (confirmed) {
       $.ajax({
         url: "./api/employees.php?id=" + employeeId,
         type: "DELETE",
         dataType: "json",
-
         success: function (response) {
           console.log("DELETE Response:", response);
 
@@ -262,5 +288,4 @@ $(document).ready(function () {
       });
     }
   });
-
 });

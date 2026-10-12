@@ -59,6 +59,15 @@ include_once('./config/conn.php');
                     <input type="text" name="department" id="department" placeholder="Enter your Department" required>
                 </div>
 
+                <div class="form-group" id="statusField">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" required>
+                        <option value="0">Deleted</option>
+                        <option value="1">Active</option>
+                        <option value="2">Inactive</option>
+                    </select>
+                </div>
+
                 <button type="reset">Clear</button>
                 <button type="submit" id="saveEmployeeBtn">Save Employee</button>
                 <button type="button" id="updateEmployeeBtn" hidden>Update Employee</button>
@@ -80,13 +89,14 @@ include_once('./config/conn.php');
                             <th>Name</th>
                             <th>Email</th>
                             <th>Department</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
 
                     <tbody id="employeeTableBody">
                         <tr>
-                            <td colspan="5">Loading Employees... </td>
+                            <td colspan="5"> Employees not found .... </td>
                         </tr>
                     </tbody>
 

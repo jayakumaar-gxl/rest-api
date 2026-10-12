@@ -3,7 +3,7 @@ require_once('../config/conn.php');
 // https://chatgpt.com/share/6aba48b1-cc3c-83ee-9800-97f34b814b1f 27914 3237
 //https://chatgpt.com/share/6aca31bf-b8bc-83e8-b312-d9dbeff89983
 
-
+// JSON RESPONSE
 function sendResponse($responseCode, $status, $message, $data = null)
 {
     http_response_code($responseCode);
@@ -15,8 +15,93 @@ function sendResponse($responseCode, $status, $message, $data = null)
     exit;
 }
 
+// POST
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    $input = json_decode(file_get_contents("php://input"), true);
+    if ($input == null) {
+        sendResponse(400, false, "Invalid JSON Format");
+    }
+    
+    $name = $input['name'] ?? '';
+    $email = $input['email'] ?? '';
+    $department = $input['department'] ?? '';
+
+    if (empty($name) || empty($email) || empty($department)) {
+        sendResponse(400, false, "Name, Email or Department value is missing");
+    }
+
+    //Email Verification - POST
+    $stmt=mysqli_prepare($conn,"SELECT email,status from employees WHERE status=1 AND email=?  LIMIT 1");
+    mysqli_stmt_bind_param($stmt,'s',$email);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_store_result($stmt);
+
+    if (mysqli_stmt_num_rows($stmt) > 0) {
+        mysqli_stmt_close($stmt);
+        sendResponse(409, true, "Email already exist");
+    }
+    mysqli_stmt_close($stmt);
+
+
+    // Prepared statements method
+    $stmt = mysqli_prepare($conn, "INSERT INTO employees (name,email,department,status) VALUES (?,?,?,1)");
+    mysqli_stmt_bind_param($stmt, 'sss', $name, $email, $department);
+
+    try {
+        // Prepared statements method continuation
+        mysqli_stmt_execute($stmt);
+        sendResponse(201, true, "Employee Created Successfully");
+    } catch (mysqli_sql_exception $e) {
+        sendResponse(500, false, "Failed to create employee");
+    }
+}
+
+// PUT
+if ($_SERVER['REQUEST_METHOD'] == "PUT") {
+    $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+    $input = json_decode(file_get_contents("php://input"), true);
+    if ($input == null) {
+        sendResponse(400, false, "Invalid json format");
+    }
+
+    // $empId = $input['id'];
+    $name = $input['name'];
+    $email = $input['email'];
+    $department = $input['department'];
+    $status = $input['status'];
+    if (empty($name) || empty($email) || empty($department)) {
+        sendResponse(400, false, "User - Name, Email, Department or or values are missing");
+    }
+
+    // Email Verification - PUT
+    $stmt=mysqli_prepare($conn,"SELECT id,email,status from employees where status=1 AND email=? AND id!=? ");
+    mysqli_stmt_bind_param($stmt,'si',$email,$id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_store_result($stmt);
+
+    if(mysqli_stmt_num_rows($stmt)>0){
+        $duplicateCount =mysqli_stmt_close($stmt);
+        sendResponse(409,false,"Email Already Exists",null);
+    }
+    mysqli_stmt_close($stmt);
+
+    // Prepared statements method
+    $stmt = mysqli_prepare($conn, "UPDATE employees SET name=?,email=?,department=?,status=?, updated_at='NOW()' WHERE id=?");
+    mysqli_stmt_bind_param($stmt, 'sssii', $name, $email, $department, $status, $id);
+
+    try {
+        // Prepared statements method continuation
+        mysqli_stmt_execute($stmt);
+        sendResponse(200, true, $name . ' - employee updated successfully');
+    } catch (mysqli_sql_exception $e) {
+        sendResponse(500, false, 'Failed to update employee');
+    }
+}
+
 // DELETE
 if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
+    sendResponse(200, true, "DELETE method reached");
+
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     $input = json_decode(file_get_contents('php://input'), true);
 
@@ -42,7 +127,8 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
     $name = $employee['name'];
 
     // *  Prepared statements method
-    $deleteStmt = mysqli_prepare($conn, "DELETE from employees where id=?");
+    // $deleteStmt = mysqli_prepare($conn, "DELETE from employees where id=?");
+    $deleteStmt = mysqli_prepare($conn, "UPDATE employees SET status = 0  where id=?");
     mysqli_stmt_bind_param($deleteStmt, 'i', $id);
     try {
         // *  Prepared statements method (continuation)
@@ -50,64 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
         sendResponse(200, true, $name . ' - Employee deleted successfully');
     } catch (mysqli_sql_exception $e) {
         sendResponse(500, false, "Failed to delete employee");
-    }
-}
-
-// PUT
-if ($_SERVER['REQUEST_METHOD'] == "PUT") {
-    $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
-    $input = json_decode(file_get_contents("php://input"), true);
-    if ($input == null) {
-        sendResponse(400, false, "Invalid json format");
-    }
-
-    $name = $input['name'];
-    $email = $input['email'];
-    $department = $input['department'];
-    if (empty($name) || empty($email) || empty($department)) {
-        sendResponse(400, false, "User - Name, Email or Department values are missing");
-    }
-
-    // Prepared statements method
-    $stmt = mysqli_prepare($conn, "UPDATE employees SET name=?,email=?,department=? WHERE id=?");
-    mysqli_stmt_bind_param($stmt, 'sssi', $name, $email, $department, $id);
-
-    try {
-        // Prepared statements method continuation
-        mysqli_stmt_execute($stmt);
-        sendResponse(200, true, $name . ' - employee updated successfully');
-    } catch (mysqli_sql_exception $e) {
-        sendResponse(500, false, 'Failed to update employee');
-    }
-}
-
-// POST
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $input = json_decode(file_get_contents("php://input"), true);
-    if ($input == null) {
-        sendResponse(400, false, "Invalid JSON Format");
-    }
-
-    $name = $input['name'] ?? '';
-    $email = $input['email'] ?? '';
-    $department = $input['department'] ?? '';
-
-
-    if (empty($name) || empty($email) || empty($department)) {
-        sendResponse(400, false, "Name, Email or Department value is missing");
-    }
-
-    // Prepared statements method
-    $stmt = mysqli_prepare($conn, "INSERT INTO employees (name,email,department) VALUES (?,?,?)");
-    mysqli_stmt_bind_param($stmt, 'sss', $name, $email, $department);
-
-
-    try {
-        // Prepared statements method continuation
-        mysqli_stmt_execute($stmt);
-        sendResponse(201, true, "Employee Created Successfully");
-    } catch (mysqli_sql_exception $e) {
-        sendResponse(500, false, "Failed to create employee");
     }
 }
 
@@ -129,12 +157,12 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         if ($id === null || $id === FALSE) {
             sendResponse(400, false, "Invalid Employee ID");
         }
-        $stmt = mysqli_prepare($conn, "SELECT id, name, email, department,status FROM employees WHERE id=? AND status=1");
+        $stmt = mysqli_prepare($conn, "SELECT id, name, email, department,status FROM employees WHERE id=?");
         mysqli_stmt_bind_param($stmt, 'i', $id);
         mysqli_stmt_execute($stmt);
     } else {
         $offset=($page-1)*$limit;
-        $stmt = mysqli_prepare($conn, "SELECT id,name,email,department,status FROM employees WHERE status=1 ORDER BY id DESC LIMIT ? OFFSET ?");
+        $stmt = mysqli_prepare($conn, "SELECT id,name,email,department,status FROM employees ORDER BY id DESC LIMIT ? OFFSET ?");
         mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
         mysqli_stmt_execute($stmt);
     }
