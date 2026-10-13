@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if ($input == null) {
         sendResponse(400, false, "Invalid JSON Format");
     }
-    
+
     $name = $input['name'] ?? '';
     $email = $input['email'] ?? '';
     $department = $input['department'] ?? '';
@@ -30,9 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         sendResponse(400, false, "Name, Email or Department value is missing");
     }
 
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        sendResponse(400, false, "Invalid email format", null);
+    }
+
     //Email Verification - POST
-    $stmt=mysqli_prepare($conn,"SELECT email,status from employees WHERE status=1 AND email=?  LIMIT 1");
-    mysqli_stmt_bind_param($stmt,'s',$email);
+    $stmt = mysqli_prepare($conn, "SELECT email,status from employees WHERE status=1 AND email=?  LIMIT 1");
+    mysqli_stmt_bind_param($stmt, 's', $email);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_store_result($stmt);
 
@@ -59,6 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 // PUT
 if ($_SERVER['REQUEST_METHOD'] == "PUT") {
     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+
+    if ($id === false || $id === null || $id <= 0) {
+        sendResponse(400, false, "Valid Employee ID is required", null);
+    }
+
     $input = json_decode(file_get_contents("php://input"), true);
     if ($input == null) {
         sendResponse(400, false, "Invalid json format");
@@ -73,15 +82,27 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
         sendResponse(400, false, "User - Name, Email, Department or or values are missing");
     }
 
-    // Email Verification - PUT
-    $stmt=mysqli_prepare($conn,"SELECT id,email,status from employees where status=1 AND email=? AND id!=? ");
-    mysqli_stmt_bind_param($stmt,'si',$email,$id);
+    // Employee Verification - (available or not)
+    $stmt = mysqli_prepare($conn, "SELECT id FROM employees WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_store_result($stmt);
 
-    if(mysqli_stmt_num_rows($stmt)>0){
-        $duplicateCount =mysqli_stmt_close($stmt);
-        sendResponse(409,false,"Email Already Exists",null);
+    if (mysqli_stmt_num_rows($stmt) === 0) {
+        mysqli_stmt_close($stmt);
+        sendResponse(404, false, "Employee not found", null);
+    }
+    mysqli_stmt_close($stmt);
+
+    // Email Verification - PUT
+    $stmt = mysqli_prepare($conn, "SELECT id,email,status from employees where status=1 AND email=? AND id!=? ");
+    mysqli_stmt_bind_param($stmt, 'si', $email, $id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_store_result($stmt);
+
+    if (mysqli_stmt_num_rows($stmt) > 0) {
+        $duplicateCount = mysqli_stmt_close($stmt);
+        sendResponse(409, false, "Email Already Exists", null);
     }
     mysqli_stmt_close($stmt);
 
@@ -100,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
 
 // DELETE
 if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
-    sendResponse(200, true, "DELETE method reached");
+    // sendResponse(200, true, "DELETE method reached");
 
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     $input = json_decode(file_get_contents('php://input'), true);
@@ -143,31 +164,31 @@ if ($_SERVER['REQUEST_METHOD'] == "DELETE") {
 if ($_SERVER['REQUEST_METHOD'] == "GET") {
     $idProvided = isset($_GET['id']);
     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
-    // $page=filter_input(INPUT_GET,'page',FILTER_VALIDATE_INT);
-    // $limit=filter_input(INPUT_GET,'limit',FILTER_VALIDATE_INT);
 
-    // if($page == false || $page== null || $page<1){
-    //     sendResponse(400,false,"Invalid Page Number");
-    // }
-    // if($limit == false || $limit == null || $limit<1){
-    //     sendResponse(400,false,"Invalid Limit");
-    // }
-    
     if ($idProvided) {
         if ($id === null || $id === FALSE) {
             sendResponse(400, false, "Invalid Employee ID");
         }
         $stmt = mysqli_prepare($conn, "SELECT id, name, email, department,status FROM employees WHERE id=?");
+        if (!$stmt) {
+            sendResponse(500, false, "Database query preparation failed", null);
+        }
         mysqli_stmt_bind_param($stmt, 'i', $id);
-        mysqli_stmt_execute($stmt);
+        // mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            sendResponse(500, false, "Unable to fetch employee details", null);
+        }
     } else {
         $stmt = mysqli_prepare($conn, "SELECT id,name,email,department,status FROM employees ORDER BY id DESC");
-        mysqli_stmt_execute($stmt);
-        // $offset=($page-1)*$limit;
-        // $stmt = mysqli_prepare($conn, "SELECT id,name,email,department,status FROM employees ORDER BY id DESC LIMIT ? OFFSET ?");
-        // mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
+        if (!$stmt) {
+            sendResponse(500, false, "Database query preparation failed", null);
+        }
         // mysqli_stmt_execute($stmt);
-        // $stmt = mysqli_prepare($conn, "SELECT id,name,email,department,status FROM employees ORDER BY id DESC");
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            sendResponse(500, false, "Unable to fetch employee details", null);
+        }
     }
     $result = mysqli_stmt_get_result($stmt);
 

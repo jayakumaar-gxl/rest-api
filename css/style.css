@@ -205,7 +205,7 @@ th {
     --ag-header-height: 56px;
 
     /* Rows */
-    --ag-row-height: 60px;
+    /* --ag-row-height: 60px; */
     --ag-odd-row-background-color: #f2f2f2;
     --ag-row-hover-color: #dedede;
     --ag-selected-row-background-color: #e5e5e5;
@@ -270,7 +270,6 @@ th {
 
 
 /* ===== AG GRID QUARTZ: HEADER ===== */
-
 #employeeGrid.ag-theme-quartz .ag-header,
 #employeeGrid.ag-theme-quartz .ag-header-row,
 #employeeGrid.ag-theme-quartz .ag-header-cell {
@@ -288,17 +287,54 @@ th {
     color: #000000;
 }
 
-/* ===== AG GRID QUARTZ: PAGINATION FOOTER ===== */
 
+/* ===== AG GRID QUARTZ: PAGINATION FOOTER ===== */
 #employeeGrid.ag-theme-quartz .ag-paging-panel {
-    background: #ebebeb;
+    background: #d3d2d2;
     color: #000000;
     border-top: 1px solid #404040;
 }
 
 /* Footer buttons and icons */
-#employeeGrid.ag-theme-quartz .ag-paging-button,
 #employeeGrid.ag-theme-quartz .ag-paging-panel .ag-icon {
+    color: #000000;
+}
+#employeeGrid.ag-theme-quartz .ag-paging-button{
+    background-color: #ffffff;
+    /* color: #000000; */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Hover Effect */
+#employeeGrid.ag-theme-quartz .ag-paging-button:hover:not(.ag-disabled) {
+    background-color: #2563eb;
+    color: #ffffff !important;
+}
+
+/* Hover Icon Color */
+#employeeGrid.ag-theme-quartz .ag-paging-button:hover:not(.ag-disabled) .ag-icon {
+    color: #ffffff !important;
+}
+
+/* Hover SVG Icon Color */
+#employeeGrid.ag-theme-quartz .ag-paging-button:hover:not(.ag-disabled) svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+
+/* Disabled Button */
+#employeeGrid.ag-theme-quartz .ag-paging-button.ag-disabled {
+    color: #999999 !important;
+}
+
+/* Disabled Previous / Next Buttons */
+#employeeGrid.ag-theme-quartz .ag-paging-button.ag-disabled {
+    color: #777777;
+}
+
+/* Page Size dropdown text color */
+#employeeGrid.ag-theme-quartz .ag-picker-field-display {
     color: #000000;
 }
 
@@ -309,4 +345,68 @@ th {
     color: #2563eb;
     border: 1px solid #a3a3a3;
     border-radius: 4px;
+}
+
+
+/* AG Grid filter inputs */
+#employeeGrid.ag-theme-quartz .ag-floating-filter-input input,
+#employeeGrid.ag-theme-quartz .ag-filter input,
+#employeeGrid.ag-theme-quartz .ag-text-field-input {
+    background-color: #ffffff;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+    border-radius: 5px;
+    padding: 6px 20px;
+}
+
+/* Input focus */
+#employeeGrid.ag-theme-quartz .ag-text-field-input:focus {
+    border-color: #2563eb;
+    outline: 1px solid #2563eb;
+}
+
+/* Filter icons */
+#employeeGrid.ag-theme-quartz .ag-header .ag-icon-filter {
+    color: #ffffff;
+}
+
+/* AG Grid Page Size Selector */
+#employeeGrid.ag-theme-quartz .ag-paging-page-size select,
+#employeeGrid.ag-theme-quartz .ag-paging-page-size .ag-picker-field-wrapper {
+    /* background-color: #2563eb; */
+    color: #ffffff;
+    border: 1px solid #555555;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+/* Dropdown focus */
+#employeeGrid.ag-theme-quartz .ag-paging-page-size select:focus {
+    outline: 1px solid #ffffff;
+    border-color: #ffffff;
+}
+
+/* Page Size Dropdown Options */
+#employeeGrid.ag-theme-quartz .ag-picker-field-wrapper {
+    color: #ffffff;
+    /* background-color: #212121; */
+}
+
+#employeeGrid.ag-theme-quartz .ag-list {
+    border-radius: 5px;
+    /* padding: 5px 0px; */
+    /* background-color: #212121; */
+    color: #000000;
+}
+
+#employeeGrid.ag-theme-quartz .ag-list-item:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+/* Page Size Popup - Selected Option */
+.ag-select-list .ag-list-item.ag-selected,
+.ag-select-list .ag-list-item[aria-selected="true"] {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
 }

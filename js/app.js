@@ -54,36 +54,9 @@ $(document).ready(function () {
       dataType: "json",
       success: function (response) {
 
-        let employees=response.data || [];
+        employees=response.data || []; 
         gridApi.setGridOption('rowData',employees);
-
-        // console.log("API response",response.data);
-        //   $("#employeeTableBody").html("");
-        // employees = response.data;
-
-        // $("#employeeTableBody").empty();
-
-        // $.each(response.data, function (index, employee) {
-        //   // console.log(index,employee.id,employee.name);
-        //   let row = `
-        //             <tr>
-        //                 <td>${index + 1}</td>
-        //                 <td>${employee.name}</td>
-        //                 <td>${employee.email}</td>
-        //                 <td>${employee.department}</td>      
-        //                 <td>${getStatusLabel(employee.status)}</td>                  
-        //                 <td>
-        //                   <button type="button" class="editEmployeeBtn" data-id="${employee.id}">
-        //                     <i class="fa-regular fa-pen-to-square"></i>
-        //                   </button>
-        //                   <button type="button" class="deleteEmployeeBtn" data-id="${employee.id}">
-        //                     <i class="fa-solid fa-trash"></i>
-        //                   </button>
-        //                 </td>
-        //             </tr>        
-        //         `;
-        //   $("#employeeTableBody").append(row);
-        // });
+        // console.log("Employees loaded:", employees.length);       
       },
       error:function(xhr){
         console.error("Failed to load employees : ",xhr.responseText);        
@@ -96,64 +69,75 @@ $(document).ready(function () {
 
   // Ag Grid implementation for 
   let gridApi;
-  const columnDefs=[
+  const columnDefs = [
     {
-      headerName:"ID",
-      valueGetter:(params)=>params.node.rowIndex+1,
-      width:90,
-      sortable:true,
+      headerName: "ID",
+      valueGetter: (params) => params.node.rowIndex + 1,
+      maxWidth: 60,
+      sortable: true,
     },
     {
-      field:"name",
-      headerName:"Name",
-      filter:true,
-      sortable:true,
+      field: "name",
+      headerName: "Name",
+      filter: true,
+      sortable: true,
     },
     {
-      field:'email',
-      headerName:'Email',
-      filter:true,
-      sortable:true,
+      field: "email",
+      headerName: "Email",
+      filter: true,
+      sortable: true,
     },
     {
-      field:'department',
-      headerName:'Department',
-      filter:true,
-      sortable:true,
+      field: "department",
+      headerName: "Department",
+      filter: true,
+      sortable: true,
     },
     {
-    field: "status",
-    headerName: "Status",
-    sortable: true,
-    filter: true,
-    cellRenderer: (params) => {
+      field: "status",
+      headerName: "Status",
+      sortable: true,
+      filter: "agTextColumnFilter",
+
+      filterValueGetter: (params) => {
+        const status = Number(params.data.status);
+
+        if (status === 1) return "Active";
+        if (status === 2) return "Inactive";
+        if (status === 0) return "Deleted";
+
+        return "Unknown";
+      },
+
+      cellRenderer: (params) => {
         const status = Number(params.value);
         const badge = document.createElement("span");
 
         badge.classList.add("status-badge");
 
         if (status === 1) {
-            badge.classList.add("status-active");
-            badge.textContent = "Active";
+          badge.classList.add("status-active");
+          badge.textContent = "Active";
         } else if (status === 2) {
-            badge.classList.add("status-inactive");
-            badge.textContent = "Inactive";
+          badge.classList.add("status-inactive");
+          badge.textContent = "Inactive";
         } else if (status === 0) {
-            badge.classList.add("status-deleted");
-            badge.textContent = "Deleted";
+          badge.classList.add("status-deleted");
+          badge.textContent = "Deleted";
         } else {
-            badge.classList.add("status-unknown");
-            badge.textContent = "Unknown";
+          badge.classList.add("status-unknown");
+          badge.textContent = "Unknown";
         }
 
         return badge;
-    }
-},
+      },
+    },
     {
-    headerName: "Actions",
-    sortable: false,
-    filter: false,
-    cellRenderer: (params) => {
+      headerName: "Actions",
+      sortable: false,
+      filter: false,
+      cellRenderer: (params) => {
         const wrapper = document.createElement("div");
 
         wrapper.innerHTML = `
@@ -171,19 +155,23 @@ $(document).ready(function () {
         `;
 
         return wrapper;
-    }
-}
+      },
+    },
   ];
   const gridOptions={
     columnDefs:columnDefs,
     rowData:[],
+    rowHeight:40,
+    headerHeight:50,
     defaultColDef:{
       flex:1,
       minWidth:130,
       resizable:true,
     },
     pagination:true,
-    paginationPageSize:20
+    paginationPageSize:10,
+    paginationPageSizeSelector:[10,20,50,100,200],
+    domLayout: "autoHeight",
   };
   gridApi=agGrid.createGrid(
     document.querySelector('#employeeGrid'),
@@ -202,10 +190,12 @@ $(document).ready(function () {
   });
 
   // Cancel the Add Employee Flow
+  let employeeForm=document.getElementById('employeeForm');
   $("#cancelBtn").on("click", function () {
     // $('#employeeFormSection').prop('hidden',true);
     let confirmed = confirm("Are You Sure Want to Cancel the Process ?");
     if (confirmed) {
+      employeeForm.reset();
       $("#employeeFormSection").fadeOut(400, function () {
         $(this).prop("hidden", true);
       });
@@ -256,10 +246,7 @@ $(document).ready(function () {
 
           // Response message
           //   $("#toast").text(response.message);
-          showToast(
-            response.message || "Employee added successfully !",
-            "success",
-          );
+          showToast(response.message || "Employee added successfully !","success",);
         } else {
           //   $("#toast").text(response.message);
           showToast(response.message || "Employee Insertion Failed !", "error");
@@ -280,10 +267,10 @@ $(document).ready(function () {
   // Update Employee (PUT)
   // $('.editEmployeeBtn').on('click',function(){
   $(document).on("click", ".editEmployeeBtn", function () {
-    // console.log("Employee ID : ",employeeId);
     // alert('working')
     $("#statusField").show();
     let employeeId = $(this).data("id");
+    console.log("Employee ID : ",employeeId);
 
     let employee = employees.find(function (item) {
       return item.id == employeeId;
