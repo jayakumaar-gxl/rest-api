@@ -62,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
 // PUT
 if ($_SERVER['REQUEST_METHOD'] == "PUT") {
+
     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
 
     if ($id === false || $id === null || $id <= 0) {
@@ -69,23 +70,33 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
     }
 
     $input = json_decode(file_get_contents("php://input"), true);
-    if ($input == null) {
-        sendResponse(400, false, "Invalid json format");
+    if (!is_array($input)) {
+        sendResponse(400, false, "Invalid JSON format", null);
     }
 
-    // $empId = $input['id'];
-    $name = $input['name'];
-    $email = $input['email'];
-    $department = $input['department'];
-    $status = $input['status'];
-    if (empty($name) || empty($email) || empty($department)) {
-        sendResponse(400, false, "User - Name, Email, Department or or values are missing");
+    $name = $input['name'] ?? '';
+    $email = $input['email'] ?? '';
+    $department = $input['department'] ?? '';
+    $status = $input['status'] ?? null;
+    if (empty($name) || empty($email) || empty($department) || !isset($input['status'])) {
+        sendResponse(400, false, "Required employee fields are missing", null);
     }
 
-    // Employee Verification - (available or not)
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        sendResponse(400, false, "Invalid email format", null);
+    }
+
+    // Employee verification
     $stmt = mysqli_prepare($conn, "SELECT id FROM employees WHERE id = ?");
+    if (!$stmt) {
+        sendResponse(500, false, "Database query preparation failed", null);
+    }
     mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
+
+    if (!mysqli_stmt_execute($stmt)) {
+        mysqli_stmt_close($stmt);
+        sendResponse(500, false, "Unable to verify employee", null);
+    }
     mysqli_stmt_store_result($stmt);
 
     if (mysqli_stmt_num_rows($stmt) === 0) {
@@ -94,28 +105,45 @@ if ($_SERVER['REQUEST_METHOD'] == "PUT") {
     }
     mysqli_stmt_close($stmt);
 
-    // Email Verification - PUT
-    $stmt = mysqli_prepare($conn, "SELECT id,email,status from employees where status=1 AND email=? AND id!=? ");
+    // Duplicate email verification
+    $stmt = mysqli_prepare( $conn, "SELECT id FROM employees WHERE status = 1 AND email = ? AND id != ?" );
+
+    if (!$stmt) {
+        sendResponse(500, false, "Database query preparation failed", null);
+    }
     mysqli_stmt_bind_param($stmt, 'si', $email, $id);
-    mysqli_stmt_execute($stmt);
+
+    if (!mysqli_stmt_execute($stmt)) {
+        mysqli_stmt_close($stmt);
+        sendResponse(500, false, "Unable to verify employee email", null);
+    }
     mysqli_stmt_store_result($stmt);
 
     if (mysqli_stmt_num_rows($stmt) > 0) {
-        $duplicateCount = mysqli_stmt_close($stmt);
+        mysqli_stmt_close($stmt);
         sendResponse(409, false, "Email Already Exists", null);
     }
+
     mysqli_stmt_close($stmt);
 
-    // Prepared statements method
-    $stmt = mysqli_prepare($conn, "UPDATE employees SET name=?,email=?,department=?,status=?, updated_at='NOW()' WHERE id=?");
+    // Update employee
+    $stmt = mysqli_prepare($conn, "UPDATE employees  SET name = ?, email = ?, department = ?, status = ?, updated_at = NOW()  WHERE id = ?");
+    if (!$stmt) {
+        sendResponse(500, false, "Database query preparation failed", null);
+    }
     mysqli_stmt_bind_param($stmt, 'sssii', $name, $email, $department, $status, $id);
 
     try {
-        // Prepared statements method continuation
-        mysqli_stmt_execute($stmt);
-        sendResponse(200, true, $name . ' - employee updated successfully');
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            sendResponse(500, false, "Failed to update employee", null);
+        }
+        mysqli_stmt_close($stmt);
+        sendResponse(200, true, $name . ' - employee updated successfully', null);
     } catch (mysqli_sql_exception $e) {
-        sendResponse(500, false, 'Failed to update employee');
+        mysqli_stmt_close($stmt);
+        error_log("PUT employee update failed: " . $e->getMessage());
+        sendResponse(500, false, "Failed to update employee", null);
     }
 }
 
